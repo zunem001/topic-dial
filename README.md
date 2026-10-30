@@ -69,3 +69,7 @@ was checked by reading it against the APIs it calls (see [IMPLEMENTATION.md](IMP
 ## License
 
 GPL-2.0, like the Telegram apps it changes. See [LICENSE](LICENSE).
+
+---
+
+Suggested by [@zunem001](https://t.me/zunem001)
