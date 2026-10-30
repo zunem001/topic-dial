@@ -35,25 +35,27 @@ and switching topics takes one swipe. For Telegram Android and Telegram iOS.
 
 - `demo-android.mp4`, `demo-ios.mp4`: the demos, rebuilds of the screen that follow the patches (not screen
   recordings)
-- `topic-dial-android.patch`: the patch for [Telegram Android](https://github.com/DrKLO/Telegram) 12.10.6
+- `topic-dial-android.patch`: the patch for [Telegram Android](https://github.com/DrKLO/Telegram) 13.1.1, and
+  `topic-dial-android-12.10.6.patch` for 12.10.6
 - `topic-dial-ios.patch`: the patch for [Telegram-iOS](https://github.com/TelegramMessenger/Telegram-iOS) 13.1
-- `android/` and `ios/`: the changed source files from the patches, for easy reading
+- `android/` and `ios/`: the changed source files from the patches (Android as on 13.1.1), for easy reading
 - [IMPLEMENTATION.md](IMPLEMENTATION.md): how it works in detail, the code, and what was checked
 - `tools/demo/`: the web rebuild of the screen that renders the demos
 - `tools/ios-typecheck/`: type-checks the iOS code anywhere Swift runs
 
 ## Try it
 
-Android, on Telegram Android 12.10.6 (build 7112):
+Android, on Telegram Android 13.1.1 (build 7237):
 
 ```bash
 git clone https://github.com/DrKLO/Telegram.git && cd Telegram
-git checkout f2908b14133bbffbf7ab04f641ecb5bfaf533242
+git checkout 3de37c8cfb039452be7398909461da6288babf15
 git apply /path/to/topic-dial-android.patch
 ```
 
-Then build as usual, with your own `api_id` and `api_hash`. The app built from it has been installed and used
-on a phone.
+Then build as usual, with your own `api_id` and `api_hash`. On 12.10.6 (build 7112), check out
+`f2908b14133bbffbf7ab04f641ecb5bfaf533242` and apply `topic-dial-android-12.10.6.patch` instead: the app built
+from that one has been installed and used on a phone.
 
 iOS, on Telegram-iOS 13.1:
 

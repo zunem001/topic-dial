@@ -1,5 +1,5 @@
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBar.java b/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBar.java
-index 0a9ed5a..b5be7f3 100644
+index 8d3b92d..0f10db6 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBar.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ActionBar/ActionBar.java
 @@ -28,6 +28,7 @@ import android.graphics.Paint;
@@ -10,9 +10,9 @@ index 0a9ed5a..b5be7f3 100644
  import android.graphics.drawable.BitmapDrawable;
  import android.graphics.drawable.Drawable;
  import android.graphics.drawable.VectorDrawable;
-@@ -2218,6 +2219,20 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
- 
-     public boolean doNotDrawGlassMenu;
+@@ -2228,6 +2229,20 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
+         }
+     }
  
 +    /** Draws into the glass of the back key or the menu key, under its icon. */
 +    public interface GlassKeysDecorator {
@@ -31,7 +31,7 @@ index 0a9ed5a..b5be7f3 100644
      @Override
      protected void dispatchDraw(Canvas canvas) {
          final int p = dp(6);
-@@ -2262,11 +2277,19 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
+@@ -2272,11 +2287,19 @@ public class ActionBar extends FrameLayout implements FactorAnimator.Target, The
          if (glassDrawableBack != null && hasBackButton) {
              glassDrawableBack.setBounds(0, t, s + p * 2, b);
              glassDrawableBack.draw(canvas);
@@ -52,10 +52,10 @@ index 0a9ed5a..b5be7f3 100644
  
          if (blurredBackground && actionBarColor != Color.TRANSPARENT) {
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
-index fcd1abc..025a307 100644
+index 87afb39..dd0f758 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
-@@ -3353,6 +3353,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -3404,6 +3404,7 @@ public class ChatActivity extends BaseFragment implements
      @Override
      public void onFragmentDestroy() {
          super.onFragmentDestroy();
@@ -63,7 +63,7 @@ index fcd1abc..025a307 100644
          if (messageMetricsView != null) {
              messageMetricsView.finish();
          }
-@@ -4569,6 +4570,12 @@ public class ChatActivity extends BaseFragment implements
+@@ -4624,6 +4625,12 @@ public class ChatActivity extends BaseFragment implements
              glassBackgroundDrawableFactory,
              BlurredBackgroundProviderImpl.topPanelChatActivity(themeDelegate),
              ChatObject.isForum(currentChat));
@@ -76,7 +76,7 @@ index fcd1abc..025a307 100644
  
          if (chatMode == MODE_PINNED) {
              actionBar.setChatAvatarContainer(avatarContainer);
-@@ -6354,24 +6361,29 @@ public class ChatActivity extends BaseFragment implements
+@@ -6410,24 +6417,29 @@ public class ChatActivity extends BaseFragment implements
                          if (updateVisibility) {
                              imageReceiver.setImageY(y - dp(44));
                          }
@@ -112,7 +112,7 @@ index fcd1abc..025a307 100644
                          canvas.restore();
  
                          if (!replaceAnimation && child.getTranslationY() != 0) {
-@@ -6808,6 +6820,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -6864,6 +6876,9 @@ public class ChatActivity extends BaseFragment implements
                          scrollingFloatingTopic = true;
                          checkTextureViewPosition = true;
                          scrollingChatListView = true;
@@ -122,7 +122,7 @@ index fcd1abc..025a307 100644
                      }
                      if (SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_LOW) {
                          scrolling = false;
-@@ -9888,6 +9903,46 @@ public class ChatActivity extends BaseFragment implements
+@@ -9958,6 +9973,46 @@ public class ChatActivity extends BaseFragment implements
          return (int) (dp(SIDE_MENU_WIDTH) * getSideMenuAlpha());
      }
  
@@ -169,7 +169,7 @@ index fcd1abc..025a307 100644
      public static final int SIDE_MENU_WIDTH = 64 + 7;
  
      private long lastSwitchTopicTime;
-@@ -9900,6 +9955,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -9970,6 +10025,7 @@ public class ChatActivity extends BaseFragment implements
              createPinnedMessageView();
          }
          topicsTabs = new TopicsTabsView(getContext(), this, currentAccount, getDialogId(), getResourceProvider());
@@ -177,7 +177,7 @@ index fcd1abc..025a307 100644
          topicsTabs.doOnUpdateSideMenuPosition(() -> {
              invalidateChatListViewTopPadding();
              AndroidUtilities.forEachViews(chatListView, view -> {
-@@ -9954,10 +10010,19 @@ public class ChatActivity extends BaseFragment implements
+@@ -10024,10 +10080,19 @@ public class ChatActivity extends BaseFragment implements
              }
              checkInsets();
              checkUi_topFade();
@@ -197,7 +197,7 @@ index fcd1abc..025a307 100644
  
          int index = 8;
          topicsTabs.setCurrentTopic(getTopicId());
-@@ -9965,17 +10030,13 @@ public class ChatActivity extends BaseFragment implements
+@@ -10035,17 +10100,13 @@ public class ChatActivity extends BaseFragment implements
              presentFragment(TopicCreateFragment.create(-dialog_id, 0).setOpenInChatActivity(this));
          });
          topicsTabs.setOnTopicSelected((topicId, fromMessage) -> {
@@ -221,7 +221,7 @@ index fcd1abc..025a307 100644
  
              TLRPC.TL_forumTopic topic = topicsTabs.getTopic(topicId);
              TLRPC.Message message = topic == null ? null : topic.topicStartMessage;
-@@ -9990,198 +10051,23 @@ public class ChatActivity extends BaseFragment implements
+@@ -10060,198 +10121,23 @@ public class ChatActivity extends BaseFragment implements
                  return;
              }
  
@@ -433,7 +433,7 @@ index fcd1abc..025a307 100644
          });
  
          final int index2 = contentView.indexOfChild(chatActivityFadeView);
-@@ -12100,14 +11986,17 @@ public class ChatActivity extends BaseFragment implements
+@@ -12177,14 +12063,17 @@ public class ChatActivity extends BaseFragment implements
  
          if (topicsTabs != null) {
              topicsTabs.setSideMenuBackgroundMarginTop(ty   + getTopPanelHeightWithPadding(dp(7)) * getHashtagTabsShownT());
@@ -453,7 +453,7 @@ index fcd1abc..025a307 100644
          }
      }
  
-@@ -17429,6 +17318,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -17675,6 +17564,9 @@ public class ChatActivity extends BaseFragment implements
              }
  
              lastTouchY = ev.getY();
@@ -463,7 +463,7 @@ index fcd1abc..025a307 100644
              TextSelectionHelper.TextSelectionOverlay selectionOverlay = textSelectionHelper.getOverlayView(getContext());
              ev.offsetLocation(-selectionOverlay.getX(), -selectionOverlay.getY());
              if (textSelectionHelper.isInSelectionMode() && textSelectionHelper.getOverlayView(getContext()).onTouchEvent(ev)) {
-@@ -17620,6 +17512,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -17866,6 +17758,9 @@ public class ChatActivity extends BaseFragment implements
                  if (child == chatInputViewsContainer && instantCameraView != null && instantCameraView.getVisibility() == VISIBLE) {
                      super.drawChild(canvas, instantCameraView, drawingTime);
                  }
@@ -473,7 +473,7 @@ index fcd1abc..025a307 100644
                  result = super.drawChild(canvas, child, drawingTime);
                  if (isVideo && child == chatListView && messageObject.type != MessageObject.TYPE_ROUND_VIDEO && videoPlayerContainer != null && videoPlayerContainer.getTag() != null) {
                      canvas.save();
-@@ -21777,7 +21672,8 @@ public class ChatActivity extends BaseFragment implements
+@@ -22061,7 +21956,8 @@ public class ChatActivity extends BaseFragment implements
              }
          }
          if (chatAdapter != null && universalNotify) {
@@ -483,7 +483,7 @@ index fcd1abc..025a307 100644
              if (clearOnLoadAndScrollMessageId >= 0) {
                  final int messageId = clearOnLoadAndScrollMessageId;
                  clearOnLoadAndScrollMessageId = -1;
-@@ -21792,6 +21688,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -22076,6 +21972,7 @@ public class ChatActivity extends BaseFragment implements
                      }
                  }
              }
@@ -491,7 +491,7 @@ index fcd1abc..025a307 100644
          }
      }
  
-@@ -21804,6 +21701,10 @@ public class ChatActivity extends BaseFragment implements
+@@ -22088,6 +21985,10 @@ public class ChatActivity extends BaseFragment implements
                  messageEnterTransitionContainer.invalidate();
              }
          } else if (id == NotificationCenter.loadingMessagesFailed) {
@@ -502,7 +502,7 @@ index fcd1abc..025a307 100644
              if ((Integer) args[0] == classGuid && args[2] instanceof TLRPC.TL_error) {
                  TLRPC.TL_error e = (TLRPC.TL_error) args[2];
                  if ("FROZEN_METHOD_INVALID".equals(e.text)) {
-@@ -34655,6 +34556,8 @@ public class ChatActivity extends BaseFragment implements
+@@ -34963,6 +34864,8 @@ public class ChatActivity extends BaseFragment implements
              return false;
          } else if (chatMode == MODE_EDIT_BUSINESS_LINK && BusinessLinksActivity.closeRenameAlert(invoked)) {
              return false;
@@ -511,7 +511,7 @@ index fcd1abc..025a307 100644
          } else if (ChatObject.isMonoForum(currentChat) && !isSubscriberSuggestions && topicsTabs != null && getTopicId() != 0) {
              if (invoked) topicsTabs.selectTopic(0, topicChangedFromMessage);
              return false;
-@@ -46492,17 +46395,21 @@ public class ChatActivity extends BaseFragment implements
+@@ -46919,17 +46822,21 @@ public class ChatActivity extends BaseFragment implements
  
      private void checkUi_topPanelLayoutVisibility() {
          final float factor = 1f - animatorHideTopPanelByEmojiKeyboardExpanded.getFloatValue();
@@ -537,7 +537,7 @@ index fcd1abc..025a307 100644
          }
      }
  
-@@ -47095,6 +47002,501 @@ public class ChatActivity extends BaseFragment implements
+@@ -47522,6 +47429,501 @@ public class ChatActivity extends BaseFragment implements
          return topicsTabs != null ? topicsTabs.getTabsVisibleSpaceWithPadding(position, dp(7)) : 0;
      }
  
@@ -5293,10 +5293,10 @@ index 74722f5..fd3d690 100644
  }
 \ No newline at end of file
 diff --git a/TMessagesProj/src/main/res/values/strings.xml b/TMessagesProj/src/main/res/values/strings.xml
-index 1013bb6..aea3fa9 100644
+index db9de75..8ee26fc 100644
 --- a/TMessagesProj/src/main/res/values/strings.xml
 +++ b/TMessagesProj/src/main/res/values/strings.xml
-@@ -9979,6 +9979,14 @@
+@@ -10041,6 +10041,14 @@
      <string name="AllChatsShort">All</string>
      <string name="AllTopicsShort">All</string>
      <string name="AllTopicsSide">All</string>

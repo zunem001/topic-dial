@@ -7,8 +7,9 @@ the apps' sources.
 
 ## Android
 
-Written against Telegram Android 12.10.6 (build 7112), [DrKLO/Telegram](https://github.com/DrKLO/Telegram) commit
-`f2908b14133bbffbf7ab04f641ecb5bfaf533242`.
+For Telegram Android 13.1.1 (build 7237), [DrKLO/Telegram](https://github.com/DrKLO/Telegram) commit
+`3de37c8cfb039452be7398909461da6288babf15`. It was first written for 12.10.6 (build 7112, commit
+`f2908b14133bbffbf7ab04f641ecb5bfaf533242`), and `topic-dial-android-12.10.6.patch` still applies there.
 
 In a forum group shown as tabs, the topic bar can roll up into a little wheel, and roll back out across its row
 when you need every topic, at the top, on the side or at the bottom. Rolled up at the top, the wheel and the
@@ -164,11 +165,13 @@ and its latest message.
 
 ### What was checked
 
-- The patch applies cleanly to `f2908b1`: the five files it changes there are byte for byte the ones it was
-  written against. It contains no keys; to build, use your own `api_id` and `api_hash`.
-- It compiles there unchanged, and the app built from it has been installed and used on a phone.
-- Telegram has since moved on to 13.1. On 13.1.1 (`3de37c8`) every hunk still applies but one in `ActionBar.java`,
-  where 13.1 added a `setDrawGlassTitle` setter right where the hook goes; that hunk has to be placed by hand.
+- On 13.1.1 (`3de37c8`): the patch applies cleanly, and the app module (`TMessagesProj`) compiles with it,
+  against 13.1.1's own Java, resources and build files. Next to Topic Dial, 13.1 changed `ActionBar` (a new
+  `setDrawGlassTitle`, right beside the patch's hook) and `ChatActivity` (its mute menu and photo viewer, not the
+  parts the patch touches); the patch takes both as they are.
+- On 12.10.6 (`f2908b1`): `topic-dial-android-12.10.6.patch` applies cleanly, compiles unchanged, and the app
+  built from it has been installed and used on a phone.
+- Neither patch contains keys; to build, use your own `api_id` and `api_hash`.
 
 ## iOS
 
