@@ -1,0 +1,279 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Topic Dial demo stage</title>
+<script>
+  // The phone on the stage: the Android phone, or with ?skin=ios Telegram iOS on an iPhone, which
+  // loads no web fonts (Inter, installed on the machine, stands in for San Francisco).
+  window.SKIN = /[?&]skin=ios\b/.test(location.search) ? "ios" : "android";
+  document.write(window.SKIN === "ios" ? '<link rel="stylesheet" href="phone.css"><link rel="stylesheet" href="phone-ios.css">' :
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Schibsted+Grotesk:wght@500;700;800&display=swap">' +
+    '<link rel="stylesheet" href="phone.css">');
+</script>
+<style>
+  /* A 1080 x 1080 stage, like the clips @designers shows: one phone, a backdrop that follows the
+     story, a camera that moves in on the detail that matters, and a fingertip for every touch. */
+  html, body { margin: 0; background: #000; }
+  #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; font-family: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif; }
+  #bg { position: absolute; inset: 0; }
+  #grain { position: absolute; inset: 0; opacity: .05; mix-blend-mode: overlay; background-image: repeating-radial-gradient(circle at 30% 40%, #fff 0 1px, transparent 1px 3px); }
+  #rig { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #device { position: relative; width: 382px; height: 782px; border-radius: 56px; padding: 11px; box-sizing: border-box;
+    background: linear-gradient(150deg, #3a4248 0%, #101417 22%, #0b0e10 60%, #2a3136 100%);
+    box-shadow: 0 60px 90px -40px rgba(0, 0, 0, .65), 0 18px 40px -20px rgba(0, 0, 0, .5), inset 0 0 0 1.5px rgba(255, 255, 255, .14), inset 0 0 0 3px rgba(0, 0, 0, .6); }
+  #device .btn { position: absolute; right: -3px; width: 4px; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #22292e, #4a535a); }
+  #screenwrap { width: 360px; height: 760px; border-radius: 45px; overflow: hidden; position: relative; isolation: isolate; }
+  #rings { position: absolute; inset: 0; pointer-events: none; }
+  /* A touch is a fingertip of frosted glass: it comes down onto the screen and presses in, drags a
+     comet's tail that tapers away behind it, and lifts off in a ring of light. White with a soft
+     shadow and a fine dark edge, so it reads on a light screen and a dark one. */
+  #rings .tip { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; box-sizing: border-box;
+    background: radial-gradient(circle at 50% 36%, rgba(255, 255, 255, .58) 0%, rgba(232, 238, 244, .34) 52%, rgba(52, 64, 78, .34) 100%);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .96), inset 0 -5px 9px rgba(255, 255, 255, .2), 0 0 0 1.5px rgba(16, 26, 38, .38),
+      0 7px 18px rgba(0, 0, 0, .34), 0 2px 4px rgba(0, 0, 0, .22); }
+  #rings .tip::after { content: ""; position: absolute; left: 27%; top: 13%; width: 46%; height: 27%; border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 70%); }
+  #rings .wave { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; box-sizing: border-box;
+    border: 2px solid rgba(255, 255, 255, .96); box-shadow: 0 0 0 1px rgba(16, 26, 38, .3), inset 0 0 0 1px rgba(16, 26, 38, .16), 0 0 16px rgba(255, 255, 255, .4); }
+  #rings svg { position: absolute; left: 0; top: 0; width: 1080px; height: 1080px; overflow: visible; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .3)); }
+  #caption { position: absolute; left: 0; right: 0; top: 34px; display: flex; justify-content: center; pointer-events: none; }
+  #caption .chip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 26px; border-radius: 26px;
+    background: rgba(8, 12, 16, .38); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); color: #fff; text-align: center; }
+  #caption .title { font-weight: 800; font-size: 50px; letter-spacing: -0.02em; line-height: 1.02; }
+  #caption .text { font-weight: 500; font-size: 30px; letter-spacing: -0.005em; line-height: 1.2; max-width: 900px; }
+  #caption .chip.big { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; text-shadow: 0 2px 18px rgba(0,0,0,.25); }
+  #caption .chip.big .text { font-size: 30px; opacity: .92; }
+  /* ?skin=ios: an iPhone 16 Pro. Its 402 x 874 pt screen sits in a thin black border inside a thin
+     titanium band, the Action button and the volume buttons on the left, the side button and Camera
+     Control on the right. Captions in the San Francisco stand-in. */
+  #stage.ios { font-family: "Inter Display", "Inter", sans-serif; }
+  #stage.ios #device { width: 424px; height: 896px; border-radius: 73px;
+    background: linear-gradient(145deg, #dcdddb 0%, #8e908f 13%, #6d6f6f 40%, #858786 68%, #d2d3d1 100%);
+    box-shadow: 0 60px 90px -40px rgba(0, 0, 0, .6), 0 18px 40px -20px rgba(0, 0, 0, .45), inset 0 0 0 .75px rgba(255, 255, 255, .55), inset 0 0 1px 1.5px rgba(0, 0, 0, .25); }
+  #stage.ios #device::before { content: ""; position: absolute; inset: 3.5px; border-radius: 69.5px; background: #030303; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); }
+  #stage.ios #screenwrap { width: 402px; height: 874px; border-radius: 62px; }
+  #stage.ios #device .btn { right: -2.5px; width: 3.5px; border-radius: 0 2px 2px 0; background: linear-gradient(90deg, #6f7171, #c8c9c7 55%, #8b8d8c); }
+  #stage.ios #device .btn.l { right: auto; left: -2.5px; border-radius: 2px 0 0 2px; background: linear-gradient(270deg, #6f7171, #c8c9c7 55%, #8b8d8c); }
+  #stage.ios #device .btn.cc { right: -1.5px; width: 2.5px; background: linear-gradient(90deg, #45484a, #9a9da0); }
+  #stage.ios #caption .title { letter-spacing: -0.025em; }
+  #stage.ios #caption .text { font-family: "Inter", sans-serif; letter-spacing: -0.012em; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"></div>
+  <div id="grain"></div>
+  <div id="rig"><div id="device"><span class="btn" style="top:150px;height:64px"></span><span class="btn" style="top:236px;height:104px"></span><div id="screenwrap"><div id="screen"></div></div></div></div>
+  <div id="rings"></div>
+  <div id="caption"><div class="chip"><div class="title"></div><div class="text"></div></div></div>
+</div>
+<script src="phone.js"></script>
+<script src="timeline.js"></script>
+<script>
+(function () {
+  "use strict";
+  // B: the device's border around the screen. S0: the stage px per screen dp (pt on the iPhone, whose
+  // screen is 402 pt wide, so it shows about as wide as the Android phone's 360 dp).
+  var IOS = window.SKIN === "ios", B = 11, S0 = IOS ? 1.05 : 1.17;
+  var stage = document.getElementById("stage"), bg = document.getElementById("bg"), rig = document.getElementById("rig");
+  var ringsEl = document.getElementById("rings"), cap = document.getElementById("caption"), chip = cap.firstChild;
+  var capTitle = chip.querySelector(".title"), capText = chip.querySelector(".text");
+  var TL = window.TIMELINE;
+  var events = [];
+  var currentT = 0;
+
+  if (IOS) {
+    // The iPhone's keys: the Action button and the volume buttons, the side button and Camera Control.
+    var device = document.getElementById("device");
+    stage.classList.add("ios");
+    Array.prototype.forEach.call(device.querySelectorAll(".btn"), function (b) { b.remove(); });
+    device.insertAdjacentHTML("afterbegin", '<span class="btn l" style="top:172px;height:34px"></span><span class="btn l" style="top:242px;height:64px"></span>' +
+      '<span class="btn l" style="top:322px;height:64px"></span><span class="btn" style="top:258px;height:104px"></span><span class="btn cc" style="top:548px;height:66px"></span>');
+  }
+  Phone.init(document.getElementById("screen"), { skin: window.SKIN });
+  Phone.on(function (type, data) { events.push({ t: currentT, type: type, data: data }); });
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function easeInOut(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+  function hex(c) { var n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function mix(a, b, t) { return [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], t)); }); }
+  function rgb(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (a == null ? 1 : a) + ")"; }
+  // How far along its path a drag is. A drag with steps moves one step at a time and rests on
+  // each, the way you turn a dial slowly to read it.
+  function dragFrac(g, p) {
+    if (!g.steps) return easeInOut(p);
+    var f = p * g.steps, i = Math.min(g.steps - 1, Math.floor(f));
+    return (i + easeInOut(clamp((f - i) / 0.42, 0, 1))) / g.steps;
+  }
+
+  // Keyframed values: each key starts at t and eases from the previous value over d seconds.
+  function keyed(keys, t, read, blend) {
+    var prev = read(keys[0]), cur = prev, i;
+    for (i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (k.t > t) break;
+      var target = read(k);
+      var p = k.d ? clamp((t - k.t) / k.d, 0, 1) : 1;
+      cur = blend(prev, target, (k.ease || easeInOut)(p));
+      prev = cur;
+    }
+    return cur;
+  }
+
+  function cameraAt(t) {
+    return keyed(TL.camera, t, function (k) { return { cx: k.cx, cy: k.cy, z: k.z, fx: k.fx == null ? 540 : k.fx, fy: k.fy == null ? 598 : k.fy }; }, function (a, b, p) {
+      return { cx: lerp(a.cx, b.cx, p), cy: lerp(a.cy, b.cy, p), z: lerp(a.z, b.z, p), fx: lerp(a.fx, b.fx, p), fy: lerp(a.fy, b.fy, p) };
+    });
+  }
+  function backdropAt(t) {
+    return keyed(TL.backdrop, t, function (k) { return { a: hex(k.a), b: hex(k.b), g: hex(k.glow) }; }, function (x, y, p) {
+      return { a: mix(x.a, y.a, p), b: mix(x.b, y.b, p), g: mix(x.g, y.g, p) };
+    });
+  }
+
+  var fired = {};
+  var drags = [];
+  window.stage = {
+    duration: TL.duration,
+    events: events,
+    // Before the clock moves: fire the actions that are due.
+    prepare: function (t) {
+      currentT = t;
+      TL.actions.forEach(function (a, i) {
+        if (!fired[i] && a.t <= t) {
+          fired[i] = true;
+          if (a.sound) events.push({ t: a.t, type: a.sound });
+          if (a.tap) events.push({ t: a.t, type: "tap" });
+          if (a.run) a.run(Phone, window.stage);
+          // A drag turns the wheel, or scrolls the chat (which makes no sound of its own).
+          if (a.drag && a.drag.target === "chat") { Phone.chatDragStart(); drags.push({ a: a, done: false }); }
+          else if (a.drag) { Phone.dragStart(); drags.push({ a: a, done: false }); events.push({ t: a.t, type: "tap" }); }
+        }
+      });
+      drags.forEach(function (d) {
+        if (d.done) return;
+        var a = d.a, g = a.drag, p = clamp((t - a.t) / g.dur, 0, 1), chat = g.target === "chat";
+        (chat ? Phone.chatDragTo : Phone.dragTo)(g.px * dragFrac(g, p));
+        if (t >= a.t + g.dur + (g.hold || 0)) { d.done = true; (chat ? Phone.chatDragEnd : Phone.dragEnd)(g.velocity); }
+      });
+    },
+    // After the clock moves: camera, backdrop, caption and rings for this frame.
+    paint: function (t) {
+      // Draw the phone for this exact moment; a requestAnimationFrame loop started before the
+      // renderer froze the clock can be dropped, so frames never depend on it.
+      Phone.renderNow();
+      var c = cameraAt(t), S = S0 * c.z;
+      var tx = c.fx - (c.cx + B) * S, ty = c.fy - (c.cy + B) * S;
+      rig.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + S + ")";
+
+      var b = backdropAt(t);
+      bg.style.background = "radial-gradient(70% 60% at 50% 42%, " + rgb(b.g, .55) + ", " + rgb(b.g, 0) + " 70%), " +
+        "radial-gradient(120% 120% at 15% 0%, " + rgb(b.a) + ", " + rgb(b.b) + " 75%)";
+
+      // Caption
+      var shown = null, alpha = 0;
+      TL.captions.forEach(function (k) {
+        if (t >= k.t0 - 0.01 && t <= k.t1) {
+          var a = Math.min(clamp((t - k.t0) / 0.35, 0, 1), clamp((k.t1 - t) / 0.3, 0, 1));
+          if (a > alpha || !shown) { shown = k; alpha = a; }
+        }
+      });
+      if (shown) {
+        chip.className = "chip" + (shown.big ? " big" : "");
+        capTitle.textContent = shown.title || ""; capTitle.style.display = shown.title ? "" : "none";
+        capText.textContent = shown.text || ""; capText.style.display = shown.text ? "" : "none";
+        cap.style.opacity = easeOut(alpha);
+        cap.style.transform = "translateY(" + (-10 * (1 - easeOut(alpha))) + "px)";
+        if (shown.big) cap.style.top = "60px"; else cap.style.top = "34px";
+      } else {
+        cap.style.opacity = 0;
+      }
+
+      // Dip to black for the theme switch
+      var dip = 0;
+      (TL.dips || []).forEach(function (d) { if (t >= d.t0 && t <= d.t1) { var m = (d.t0 + d.t1) / 2; dip = Math.max(dip, 1 - Math.abs(t - m) / ((d.t1 - d.t0) / 2)); } });
+      Phone.setDip(dip * 0.92);
+
+      // Touches: the fingertip, its tail and the ring it leaves.
+      ringsEl.innerHTML = "";
+      var tipK = lerp(1, c.z, 0.3), svg = "";
+      TL.actions.forEach(function (a, ai) {
+        var target = a.tap || (a.drag && a.drag.target);
+        if (!target) return;
+        // A tap's finger comes down a moment before the tap lands (see timeline.js) and lifts as it
+        // does; a drag's lands, moves and lifts when it ends.
+        var g = a.drag, down = a.t - (a.tap ? 0.09 : 0), up = a.t + (g ? g.dur + (g.hold || 0) : 0);
+        if (t < down - 0.24 || t > up + 0.55) return;
+        // Follow the target until the finger lands, then stay where it touched.
+        if (!a._pos || t < down) {
+          var el = Phone.el(target);
+          var r = el && el.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+          if (r && r.width > 0) a._pos = { x: r.left - sr.left + r.width * (a.at ? a.at[0] : 0.5), y: r.top - sr.top + r.height * (a.at ? a.at[1] : 0.5) };
+          if (!a._pos) return;
+        }
+        var vert = !!(g && g.vertical);
+        // How far along its drag the finger is at time tt, in stage px.
+        var along = function (tt) { return g ? g.px * dragFrac(g, clamp((tt - a.t) / g.dur, 0, 1)) * S : 0; };
+        var off = along(Math.min(t, up)), x = a._pos.x + (vert ? 0 : off), y = a._pos.y + (vert ? off : 0);
+        var size = 50 * tipK, scale, op;
+        if (t < down) {
+          var q = easeOut(clamp((t - (down - 0.24)) / 0.24, 0, 1));
+          scale = lerp(1.32, 1, q); op = q;
+        } else if (t <= up) {
+          scale = lerp(1, 0.86, easeOut(clamp((t - down) / 0.09, 0, 1))); op = 1;
+        } else {
+          var lq = easeOut(clamp((t - up) / 0.32, 0, 1));
+          scale = lerp(0.86, 1.08, lq); op = 1 - lq;
+        }
+        // The tail: from where the finger was a third of a second ago to where it is, wide at the
+        // finger and tapering to a point, fading as it goes. It shortens as the finger slows and
+        // catches up with it once the finger stops or lifts.
+        if (g && t > a.t) {
+          var tailOff = along(Math.min(up, Math.max(a.t, t - 0.32))), len = Math.abs(off - tailOff);
+          if (len > 3) {
+            var hx = x, hy = y, tx = a._pos.x + (vert ? 0 : tailOff), ty = a._pos.y + (vert ? tailOff : 0);
+            var ux = (hx - tx) / len, uy = (hy - ty) / len, nx = -uy, ny = ux;
+            var rh = size * 0.4 * scale, rt = 1.2, id = "tail" + ai, f = function (v) { return v.toFixed(2); };
+            var shape = "M" + f(tx + nx * rt) + " " + f(ty + ny * rt) + "L" + f(hx + nx * rh) + " " + f(hy + ny * rh) +
+              "A" + f(rh) + " " + f(rh) + " 0 0 0 " + f(hx + ux * rh) + " " + f(hy + uy * rh) +
+              "A" + f(rh) + " " + f(rh) + " 0 0 0 " + f(hx - nx * rh) + " " + f(hy - ny * rh) +
+              "L" + f(tx - nx * rt) + " " + f(ty - ny * rt) + "A" + rt + " " + rt + " 0 0 0 " + f(tx + nx * rt) + " " + f(ty + ny * rt) + "Z";
+            // A smear of the fingertip's glass: bright down its middle and darker at its edges, like
+            // the bead, fading away along its length.
+            svg += '<linearGradient id="' + id + 'a" gradientUnits="userSpaceOnUse" x1="' + f(tx) + '" y1="' + f(ty) + '" x2="' + f(hx) + '" y2="' + f(hy) + '">' +
+              '<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".4" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff"/></linearGradient>' +
+              '<linearGradient id="' + id + 'c" gradientUnits="userSpaceOnUse" x1="' + f(hx + nx * rh) + '" y1="' + f(hy + ny * rh) + '" x2="' + f(hx - nx * rh) + '" y2="' + f(hy - ny * rh) + '">' +
+              '<stop offset="0" stop-color="#182432" stop-opacity=".6"/><stop offset=".18" stop-color="#e9eef4" stop-opacity=".6"/><stop offset=".5" stop-color="#fff" stop-opacity=".92"/>' +
+              '<stop offset=".82" stop-color="#e9eef4" stop-opacity=".6"/><stop offset="1" stop-color="#182432" stop-opacity=".6"/></linearGradient>' +
+              '<mask id="' + id + 'm" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1080"><path d="' + shape + '" fill="url(#' + id + 'a)"/></mask>' +
+              '<path d="' + shape + '" fill="url(#' + id + 'c)" mask="url(#' + id + 'm)" opacity="' + op.toFixed(3) + '"/>';
+          }
+        }
+        // Lifting off, a ring of light spreads from the fingertip and fades.
+        if (t > up) {
+          var wq = clamp((t - up) / 0.5, 0, 1), wave = document.createElement("div");
+          wave.className = "wave";
+          wave.style.left = x + "px"; wave.style.top = y + "px";
+          wave.style.width = wave.style.height = size + "px"; wave.style.margin = (-size / 2) + "px 0 0 " + (-size / 2) + "px";
+          wave.style.transform = "scale(" + lerp(0.9, 2.1, easeOut(wq)).toFixed(3) + ")";
+          wave.style.opacity = (0.9 * (1 - easeOut(wq))).toFixed(3);
+          ringsEl.appendChild(wave);
+        }
+        var tip = document.createElement("div"); tip.className = "tip";
+        tip.style.left = x + "px"; tip.style.top = y + "px";
+        tip.style.width = tip.style.height = size + "px"; tip.style.margin = (-size / 2) + "px 0 0 " + (-size / 2) + "px";
+        tip.style.opacity = op.toFixed(3); tip.style.transform = "scale(" + scale.toFixed(3) + ")";
+        ringsEl.appendChild(tip);
+      });
+      if (svg) ringsEl.insertAdjacentHTML("afterbegin", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">' + svg + "</svg>");
+    }
+  };
+  window.stage.prepare(0);
+  window.stage.paint(0);
+})();
+</script>
+</body>
+</html>
